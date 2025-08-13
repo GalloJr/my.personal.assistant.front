@@ -1,4 +1,6 @@
+// src/pages/Register.js
 import React, { useState } from 'react';
+import { Container, Box, TextField, Button, Typography, Link, Alert } from '@mui/material';
 import api from '../api';
 import { useNavigate } from 'react-router-dom';
 
@@ -9,27 +11,59 @@ export default function Register() {
   const [msg, setMsg] = useState('');
   const navigate = useNavigate();
 
-  function handleSubmit(e) {
+  const handleSubmit = (e) => {
     e.preventDefault();
     api.post('/api/auth/register', { name, email, password })
       .then(res => {
-        setMsg('Cadastro feito! Faça login.');
+        setMsg('');
         navigate('/');
       })
       .catch(err => {
         setMsg(err.response?.data?.message || 'Erro ao cadastrar');
       });
-  }
+  };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Registrar</h2>
-      <input type="text" placeholder="Nome" value={name} onChange={e=>setName(e.target.value)} required/>
-      <input type="email" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} required/>
-      <input type="password" placeholder="Senha" value={password} onChange={e=>setPassword(e.target.value)} required/>
-      <button type="submit">Cadastrar</button>
-      <p>{msg}</p>
-      <a href="/">Já tem conta? Faça login</a>
-    </form>
+    <Container maxWidth="xs">
+      <Box sx={{ mt: 8, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+        <Typography variant="h4" component="h1" gutterBottom>Registrar</Typography>
+        {msg && <Alert severity="error" sx={{ mb: 2 }}>{msg}</Alert>}
+        <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
+          <TextField
+            label="Nome"
+            variant="outlined"
+            margin="normal"
+            required
+            fullWidth
+            value={name}
+            onChange={e => setName(e.target.value)}
+          />
+          <TextField
+            label="Email"
+            type="email"
+            variant="outlined"
+            margin="normal"
+            required
+            fullWidth
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+          />
+          <TextField
+            label="Senha"
+            type="password"
+            variant="outlined"
+            margin="normal"
+            required
+            fullWidth
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+          />
+          <Button type="submit" variant="contained" fullWidth sx={{ mt: 2, mb: 1 }}>
+            Cadastrar
+          </Button>
+        </Box>
+        <Link href="/" variant="body2">Já tem conta? Faça login</Link>
+      </Box>
+    </Container>
   );
 }
