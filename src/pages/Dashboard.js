@@ -43,6 +43,7 @@ export default function Dashboard() {
             <Typography>Total de Contas: {accounts.length}</Typography>
             <Typography>Total Pendentes: R$ {pendente.toFixed(2)}</Typography>
             <Typography>Total Pago: R$ {pago.toFixed(2)}</Typography>
+            <Typography>Total Geral: R$ {total.toFixed(2)}</Typography>
           </CardContent>
           <Button variant="text" onClick={() => navigate('/accounts')} sx={{ mt: 1 }}>
             Ver Contas

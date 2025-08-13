@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   Container, Typography, Box, Card, CardContent, CardActions,
   Button, Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, MenuItem, IconButton
+  TextField, IconButton
 } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
 import api from '../api';
@@ -22,21 +22,22 @@ export default function Accounts() {
   const token = localStorage.getItem('token');
 
   useEffect(() => {
+    const fetchAccounts = async () => {
+      try {
+        const res = await api.get('/api/accounts', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setAccounts(res.data);
+        setLoading(false);
+      } catch (err) {
+        console.error(err);
+        setLoading(false);
+      }
+    };
     fetchAccounts();
-  }, []);
+  }, [token]);
 
-  const fetchAccounts = async () => {
-    try {
-      const res = await api.get('/api/accounts', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setAccounts(res.data);
-      setLoading(false);
-    } catch (err) {
-      console.error(err);
-      setLoading(false);
-    }
-  };
+  
 
   const handleOpenNew = () => {
     setEditingAccount(null);
@@ -79,6 +80,18 @@ export default function Accounts() {
   };
 
   const handleSubmit = async () => {
+    const fetchAccounts = async () => {
+      try {
+        const res = await api.get('/api/accounts', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setAccounts(res.data);
+        setLoading(false);
+      } catch (err) {
+        console.error(err);
+        setLoading(false);
+      }
+    };
     try {
       if (editingAccount) {
         // Atualizar conta
@@ -99,6 +112,18 @@ export default function Accounts() {
   };
 
   const handleDelete = async (accountId) => {
+    const fetchAccounts = async () => {
+      try {
+        const res = await api.get('/api/accounts', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setAccounts(res.data);
+        setLoading(false);
+      } catch (err) {
+        console.error(err);
+        setLoading(false);
+      }
+    };
     if (window.confirm('Confirma excluir esta conta?')) {
       try {
         await api.delete(`/api/accounts/${accountId}`, {
