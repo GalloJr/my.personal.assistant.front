@@ -1,8 +1,9 @@
+// src/pages/Accounts.js
 import React, { useEffect, useState } from 'react';
 import {
   Container, Typography, Box, Card, CardContent, CardActions,
   Button, Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, IconButton
+  TextField, MenuItem, IconButton, Grid
 } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
 import api from '../api';
@@ -19,26 +20,39 @@ export default function Accounts() {
     dueDate: '',
     status: 'pending'
   });
+
+  // Filtros do topo da tela
+  const [filter, setFilter] = useState({ status: '', month: '', year: '', title: '' });
+
+  // Pega token do usuário logado
   const token = localStorage.getItem('token');
 
   useEffect(() => {
-    const fetchAccounts = async () => {
-      try {
-        const res = await api.get('/api/accounts', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setAccounts(res.data);
-        setLoading(false);
-      } catch (err) {
-        console.error(err);
-        setLoading(false);
-      }
-    };
     fetchAccounts();
-  }, [token]);
+    // eslint-disable-next-line
+  }, []);
 
-  
+  // Função para buscar contas com filtros
+  const fetchAccounts = async () => {
+    let params = {};
+    Object.keys(filter).forEach(key => {
+      if (filter[key]) params[key] = filter[key];
+    });
 
+    try {
+      const res = await api.get('/api/accounts', {
+        params,
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setAccounts(res.data);
+      setLoading(false);
+    } catch (err) {
+      console.error(err);
+      setLoading(false);
+    }
+  };
+
+  // Handlers para abrir/fechar dialogo de cadastro/edição
   const handleOpenNew = () => {
     setEditingAccount(null);
     setForm({
@@ -79,27 +93,14 @@ export default function Accounts() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // Salva (cria ou atualiza) conta
   const handleSubmit = async () => {
-    const fetchAccounts = async () => {
-      try {
-        const res = await api.get('/api/accounts', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setAccounts(res.data);
-        setLoading(false);
-      } catch (err) {
-        console.error(err);
-        setLoading(false);
-      }
-    };
     try {
       if (editingAccount) {
-        // Atualizar conta
         await api.put(`/api/accounts/${editingAccount.id}`, form, {
           headers: { Authorization: `Bearer ${token}` }
         });
       } else {
-        // Criar nova conta
         await api.post('/api/accounts', form, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -111,19 +112,8 @@ export default function Accounts() {
     }
   };
 
+  // Exclui conta
   const handleDelete = async (accountId) => {
-    const fetchAccounts = async () => {
-      try {
-        const res = await api.get('/api/accounts', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setAccounts(res.data);
-        setLoading(false);
-      } catch (err) {
-        console.error(err);
-        setLoading(false);
-      }
-    };
     if (window.confirm('Confirma excluir esta conta?')) {
       try {
         await api.delete(`/api/accounts/${accountId}`, {
@@ -136,11 +126,86 @@ export default function Accounts() {
     }
   };
 
+  // Marcar como paga
+  const handleMarkAsPaid = async (id) => {
+    try {
+      await api.put(`/api/accounts/${id}`, { status: 'paid' },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      fetchAccounts();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Atualiza filtro na tela
+  const handleFilterChange = (e) => {
+    setFilter({ ...filter, [e.target.name]: e.target.value });
+  };
+
+  // Botão de filtrar
+  const handleFilter = () => {
+    setLoading(true);
+    fetchAccounts();
+  };
+
   if (loading) return <Container><Typography>Carregando...</Typography></Container>;
 
   return (
     <Container sx={{ mt: 4 }}>
       <Typography variant="h4" gutterBottom>Contas</Typography>
+      
+      {/* Filtros */}
+      <Grid container spacing={2} sx={{ mb: 2 }}>
+        <Grid item xs={12} md={3}>
+          <TextField
+            label="Buscar por título"
+            name="title"
+            value={filter.title}
+            onChange={handleFilterChange}
+            fullWidth
+          />
+        </Grid>
+        <Grid item xs={6} md={2}>
+          <TextField
+            label="Status"
+            name="status"
+            select
+            value={filter.status}
+            onChange={handleFilterChange}
+            fullWidth
+          >
+            <MenuItem value="">Todos</MenuItem>
+            <MenuItem value="pending">Pendente</MenuItem>
+            <MenuItem value="paid">Pago</MenuItem>
+          </TextField>
+        </Grid>
+        <Grid item xs={3} md={2}>
+          <TextField
+            label="Mês"
+            name="month"
+            type="number"
+            InputProps={{ inputProps: { min: 1, max: 12 } }}
+            value={filter.month}
+            onChange={handleFilterChange}
+            fullWidth
+          />
+        </Grid>
+        <Grid item xs={3} md={2}>
+          <TextField
+            label="Ano"
+            name="year"
+            type="number"
+            value={filter.year}
+            onChange={handleFilterChange}
+            fullWidth
+          />
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <Button variant="contained" onClick={handleFilter} fullWidth>Filtrar</Button>
+        </Grid>
+      </Grid>
+
       <Button variant="contained" sx={{ mb: 2 }} onClick={handleOpenNew}>Nova Conta</Button>
 
       {accounts.length === 0 && <Typography>Nenhuma conta cadastrada.</Typography>}
@@ -156,6 +221,11 @@ export default function Accounts() {
               <Typography>Status: {acc.status === 'pending' ? 'Pendente' : 'Pago'}</Typography>
             </CardContent>
             <CardActions>
+              {acc.status === 'pending' && (
+                <Button variant="outlined" size="small" color="success" onClick={() => handleMarkAsPaid(acc.id)}>
+                  Marcar como paga
+                </Button>
+              )}
               <IconButton color="primary" onClick={() => handleOpenEdit(acc)} aria-label="editar">
                 <Edit />
               </IconButton>
@@ -219,8 +289,8 @@ export default function Accounts() {
             value={form.status}
             onChange={handleChange}
           >
-            <option value="pending">Pendente</option>
-            <option value="paid">Pago</option>
+            <MenuItem value="pending">Pendente</MenuItem>
+            <MenuItem value="paid">Pago</MenuItem>
           </TextField>
         </DialogContent>
         <DialogActions>
